@@ -50,9 +50,8 @@ def build_evidence(
 		"synthetic": vendor.synthetic,
 		"city_imputed": vendor.city_imputed,
 		"price_imputed": vendor.price_imputed,
+		"score_breakdown": dict(score_breakdown or {}),
 	}
-	if score_breakdown is not None:
-		evidence["score_breakdown"] = dict(score_breakdown)
 	return evidence
 
 
@@ -80,3 +79,19 @@ def build_card_explanation(evidence: dict) -> str:
 		)
 
 	return f"{first_sentence} {second_facts}"
+
+
+def build_empty_result_message(
+	request: RecommendationRequest,
+	pool_size: int,
+	rejection_counts: dict[str, int],
+) -> str:
+	"""Explain why a city/category pool produced no eligible candidates."""
+	return (
+		f"В городе {request.city} найдено {pool_size} профилей категории "
+		f"«{request.category}», но подходящих подрядчиков нет: "
+		f"{rejection_counts.get('busy_on_date', 0)} заняты на дату, "
+		f"{rejection_counts.get('unsupported_event_format', 0)} не поддерживают формат, "
+		f"{rejection_counts.get('over_budget', 0)} выше бюджета, "
+		f"{rejection_counts.get('duration_exceeded', 0)} не подходят по длительности."
+	)

@@ -1,6 +1,10 @@
 from datetime import date
 
-from app.explanations import build_card_explanation, build_evidence
+from app.explanations import (
+	build_card_explanation,
+	build_empty_result_message,
+	build_evidence,
+)
 from app.recommender import recommend
 from app.schemas import RecommendationRequest, Vendor
 
@@ -80,3 +84,38 @@ def test_no_eligible_message_is_nonempty_and_has_numeric_diagnostics():
 	assert response.status == "no_eligible_candidates"
 	assert response.message
 	assert all(str(number) in response.message for number in (1, 1, 1, 1, 1))
+
+
+def test_empty_result_message_builder_contains_pool_and_rejection_counts():
+	message = build_empty_result_message(
+		make_request(),
+		3,
+		{
+			"busy_on_date": 1,
+			"unsupported_event_format": 1,
+			"over_budget": 1,
+			"duration_exceeded": 1,
+		},
+	)
+
+	assert "3 профилей" in message
+	assert all(str(number) in message for number in (1, 1, 1, 1))
+
+
+def test_demo_cases_file_contains_four_scenarios():
+	import json
+	from pathlib import Path
+
+	cases = json.loads(
+		(Path(__file__).parents[1] / "demo" / "demo_cases.json").read_text(
+			encoding="utf-8"
+		)
+	)
+
+	assert len(cases) >= 4
+	assert {case["scenario_name"] for case in cases} >= {
+		"dense_category",
+		"rare_category",
+		"no_result",
+		"date_comparison",
+	}

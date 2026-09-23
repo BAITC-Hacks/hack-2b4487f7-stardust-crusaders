@@ -2,7 +2,11 @@
 
 from collections import Counter
 
-from .explanations import build_card_explanation, build_evidence
+from .explanations import (
+	build_card_explanation,
+	build_empty_result_message,
+	build_evidence,
+)
 from .filters import evaluate_pool, filter_city_category_pool, passes_hard_filters
 from .scoring import score_vendor
 from .schemas import (
@@ -92,17 +96,9 @@ def recommend(
 	}
 
 	if not eligible:
-		message = (
-			f"В городе {request.city} найдено {len(pool)} профилей категории "
-			f"«{request.category}», но подходящих подрядчиков нет: "
-			f"{rejection_counts['busy_on_date']} заняты на дату, "
-			f"{rejection_counts['unsupported_event_format']} не поддерживают формат, "
-			f"{rejection_counts['over_budget']} выше бюджета, "
-			f"{rejection_counts['duration_exceeded']} не подходят по длительности."
-		)
 		return RecommendationResponse(
 			status="no_eligible_candidates",
-			message=message,
+			message=build_empty_result_message(request, len(pool), rejection_counts),
 			results=[],
 			debug=debug,
 		)
@@ -123,12 +119,23 @@ def recommend(
 		{"id": vendor.id, "score_breakdown": scores[vendor.id]}
 		for vendor in eligible[:3]
 	]
+	result_cards = [
+		_card(vendor, request, scores[vendor.id])
+		for vendor in eligible[:3]
+	]
+	message = f"Найдено подходящих подрядчиков: {len(eligible)}."
+	if len(eligible) < 3:
+		message = (
+			f"Найдено {len(eligible)} подходящих подрядчиков из {len(pool)} профилей "
+			"категории и города; трёх результатов нет. "
+			f"Отсеяно: {rejection_counts['busy_on_date']} по занятости, "
+			f"{rejection_counts['unsupported_event_format']} по формату, "
+			f"{rejection_counts['over_budget']} по бюджету, "
+			f"{rejection_counts['duration_exceeded']} по длительности."
+		)
 	return RecommendationResponse(
 		status="matched",
-		message=f"Найдено подходящих подрядчиков: {len(eligible)}.",
-		results=[
-			_card(vendor, request, scores[vendor.id])
-			for vendor in eligible[:3]
-		],
+		message=message,
+		results=result_cards,
 		debug=debug,
 	)

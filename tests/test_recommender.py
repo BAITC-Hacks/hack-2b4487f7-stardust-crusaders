@@ -143,3 +143,4 @@ def test_returns_all_matches_when_fewer_than_three_exist():
 	)
 
 	assert len(response.results) == 2
+	assert "трёх результатов нет" in response.message
