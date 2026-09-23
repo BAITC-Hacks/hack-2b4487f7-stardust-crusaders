@@ -1,10 +1,14 @@
 from datetime import date
 from pathlib import Path
 
-from app.dataset import load_vendors
+from app.dataset import find_dataset_csv, load_vendors
 
 
 DATASET_PATH = Path(__file__).parents[1] / "data" / "hackathon_dataset_anonymized.csv"
+
+
+def test_default_dataset_path_is_found():
+    assert find_dataset_csv() == DATASET_PATH
 
 
 def test_load_vendors_normalizes_dataset():
@@ -19,7 +23,7 @@ def test_load_vendors_normalizes_dataset():
 
 
 def test_load_vendors_parses_empty_max_hours_and_boolean_fields():
-    vendors = load_vendors(DATASET_PATH)
+    vendors = load_vendors()
 
     assert vendors[0].max_hours is None
     assert all(isinstance(vendor.synthetic, bool) for vendor in vendors)

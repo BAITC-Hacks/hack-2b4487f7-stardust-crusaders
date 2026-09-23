@@ -54,6 +54,8 @@ class RecommendationCard:
 	city_imputed: bool
 	price_imputed: bool
 	explanation: str
+	score: float | None = None
+	score_breakdown: dict | None = None
 
 
 @dataclass

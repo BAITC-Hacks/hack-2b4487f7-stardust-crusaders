@@ -84,6 +84,18 @@ def test_higher_total_score_is_sorted_first():
 	]
 
 
+def test_description_semantic_keywords_influence_score():
+	request = make_request(event_type="свадьба", category="Флорист")
+	semantic = make_vendor(
+		description="Флористика, декор и фотозона для камерной свадьбы."
+	)
+	plain = make_vendor(description="Услуги для мероприятий.")
+
+	assert score_vendor(semantic, request)["description_fit"] > score_vendor(
+		plain, request
+	)["description_fit"]
+
+
 def test_tie_breaking_uses_price_then_id(monkeypatch):
 	from app import recommender
 

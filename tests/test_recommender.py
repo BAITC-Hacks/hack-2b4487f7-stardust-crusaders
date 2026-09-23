@@ -82,6 +82,14 @@ def test_matched_returns_at_most_three_sorted_cards():
 		"vendor-2", "vendor-1", "vendor-3"
 	]
 	assert len(response.results) == 3
+	assert all(card.score is not None for card in response.results)
+	assert all(card.score_breakdown for card in response.results)
+	assert response.debug["ranked_candidate_ids"][:3] == [
+		card.id for card in response.results
+	]
+	assert set(response.debug["score_breakdowns"]) == set(
+		response.debug["ranked_candidate_ids"]
+	)
 
 
 def test_busy_vendor_is_never_returned():

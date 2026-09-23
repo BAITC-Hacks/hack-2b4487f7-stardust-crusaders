@@ -7,6 +7,20 @@ from pathlib import Path
 from .schemas import Vendor
 
 
+def find_dataset_csv() -> Path:
+	"""Find the project dataset, preferring its canonical filename."""
+	data_dir = Path(__file__).resolve().parents[1] / "data"
+	preferred = data_dir / "hackathon_dataset_anonymized.csv"
+	if preferred.exists():
+		return preferred
+	csv_files = sorted(data_dir.glob("*.csv"))
+	if len(csv_files) == 1:
+		return csv_files[0]
+	if not csv_files:
+		raise FileNotFoundError(f"No CSV dataset found in {data_dir}")
+	raise RuntimeError(f"Expected one CSV dataset in {data_dir}, found {len(csv_files)}")
+
+
 def parse_pipe_list(value: str) -> list[str]:
 	"""Return trimmed, non-empty values from a pipe-separated field."""
 	return [part.strip() for part in (value or "").split("|") if part.strip()]
@@ -35,9 +49,9 @@ def parse_busy_dates(value: str) -> set[date]:
 	return {date.fromisoformat(item) for item in parse_pipe_list(value)}
 
 
-def load_vendors(csv_path: str | Path) -> list[Vendor]:
+def load_vendors(csv_path: str | Path | None = None) -> list[Vendor]:
 	"""Load and normalize all vendor rows from a CSV file."""
-	path = Path(csv_path)
+	path = find_dataset_csv() if csv_path is None else Path(csv_path)
 	with path.open("r", encoding="utf-8-sig", newline="") as stream:
 		reader = csv.DictReader(stream)
 		if reader.fieldnames is None:

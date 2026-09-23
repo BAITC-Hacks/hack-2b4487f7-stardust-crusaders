@@ -41,6 +41,8 @@ def _card(
 		city_imputed=vendor.city_imputed,
 		price_imputed=vendor.price_imputed,
 		explanation=build_card_explanation(evidence),
+		score=score_breakdown["total"],
+		score_breakdown=score_breakdown,
 	)
 
 
@@ -64,6 +66,8 @@ def recommend(
 				"eligible_count": 0,
 				"rejection_counts": {},
 				"request_summary": request_summary,
+				"ranked_candidate_ids": [],
+				"score_breakdowns": {},
 			},
 		)
 
@@ -83,6 +87,8 @@ def recommend(
 		"eligible_count": len(eligible),
 		"rejection_counts": dict(sorted(rejection_counts.items())),
 		"request_summary": request_summary,
+		"ranked_candidate_ids": [],
+		"score_breakdowns": {},
 	}
 
 	if not eligible:
@@ -109,6 +115,10 @@ def recommend(
 			vendor.id,
 		)
 	)
+	debug["ranked_candidate_ids"] = [vendor.id for vendor in eligible]
+	debug["score_breakdowns"] = {
+		vendor.id: scores[vendor.id] for vendor in eligible
+	}
 	debug["top_candidates"] = [
 		{"id": vendor.id, "score_breakdown": scores[vendor.id]}
 		for vendor in eligible[:3]
