@@ -20,6 +20,14 @@ def recommendation_payload(**overrides):
 	return payload
 
 
+def test_root_returns_service_links():
+	response = client.get("/")
+
+	assert response.status_code == 200
+	assert response.json()["service"] == "ToiMatch AI"
+	assert response.json()["docs"] == "/docs"
+
+
 def test_health_returns_status_and_loaded_vendor_count():
 	response = client.get("/health")
 
@@ -35,6 +43,15 @@ def test_recommend_returns_response():
 	assert "status" in response.json()
 	assert "results" in response.json()
 	assert "score" in response.json()["results"][0]
+
+
+def test_recommend_rejects_past_date():
+	response = client.post(
+		"/recommend",
+		json=recommendation_payload(date="2020-01-01"),
+	)
+
+	assert response.status_code == 422
 
 
 def test_category_not_found_works_through_api():
