@@ -79,7 +79,7 @@ def test_matched_returns_at_most_three_sorted_cards():
 
 	assert response.status == "matched"
 	assert [card.id for card in response.results] == [
-		"vendor-3", "vendor-1", "vendor-2"
+		"vendor-2", "vendor-1", "vendor-3"
 	]
 	assert len(response.results) == 3
 

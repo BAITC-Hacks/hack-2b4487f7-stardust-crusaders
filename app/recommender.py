@@ -3,6 +3,7 @@
 from collections import Counter
 
 from .filters import evaluate_pool, filter_city_category_pool, passes_hard_filters
+from .scoring import score_vendor
 from .schemas import (
 	RecommendationCard,
 	RecommendationRequest,
@@ -99,7 +100,18 @@ def recommend(
 			debug=debug,
 		)
 
-	eligible.sort(key=lambda vendor: (vendor.price_from_kzt, vendor.id))
+	scores = {vendor.id: score_vendor(vendor, request) for vendor in eligible}
+	eligible.sort(
+		key=lambda vendor: (
+			-scores[vendor.id]["total"],
+			vendor.price_from_kzt,
+			vendor.id,
+		)
+	)
+	debug["top_candidates"] = [
+		{"id": vendor.id, "score_breakdown": scores[vendor.id]}
+		for vendor in eligible[:3]
+	]
 	return RecommendationResponse(
 		status="matched",
 		message=f"Найдено подходящих подрядчиков: {len(eligible)}.",
