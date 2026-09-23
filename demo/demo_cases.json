@@ -1,0 +1,94 @@
+[
+  {
+    "scenario_name": "dense_category",
+    "request": {
+      "city": "Алматы",
+      "date": "2027-01-01",
+      "event_type": "корпоратив",
+      "category": "Ведущий",
+      "budget_kzt": 2000000,
+      "duration_hours": null,
+      "language": null
+    },
+    "expected_status": "matched",
+    "short_reason_why_this_demo_is_useful": "Большая категория показывает отбор и ranking top-кандидатов.",
+    "expected_result_ids": [
+      "HK-75012",
+      "HK-72938",
+      "HK-27222"
+    ]
+  },
+  {
+    "scenario_name": "rare_category",
+    "request": {
+      "city": "Алматы",
+      "date": "2027-01-01",
+      "event_type": "свадьба",
+      "category": "Флорист",
+      "budget_kzt": 250000,
+      "duration_hours": null,
+      "language": null
+    },
+    "expected_status": "matched",
+    "short_reason_why_this_demo_is_useful": "Редкая категория показывает реальный pool и число доступных результатов.",
+    "expected_result_ids": [
+      "HK-39372",
+      "HK-90001"
+    ]
+  },
+  {
+    "scenario_name": "no_result",
+    "request": {
+      "city": "Алматы",
+      "date": "2027-01-01",
+      "event_type": "свадьба",
+      "category": "Флорист",
+      "budget_kzt": 199999,
+      "duration_hours": null,
+      "language": null
+    },
+    "expected_status": "no_eligible_candidates",
+    "short_reason_why_this_demo_is_useful": "Бюджет ниже минимальной цены pool, поэтому message показывает причину отказа.",
+    "expected_result_ids": []
+  },
+  {
+    "scenario_name": "date_comparison",
+    "request": {
+      "request_a": {
+        "city": "Алматы",
+        "date": "2027-01-01",
+        "event_type": "корпоратив",
+        "category": "Ведущий",
+        "budget_kzt": 2000000,
+        "duration_hours": null,
+        "language": null
+      },
+      "request_b": {
+        "city": "Алматы",
+        "date": "2026-09-24",
+        "event_type": "корпоратив",
+        "category": "Ведущий",
+        "budget_kzt": 2000000,
+        "duration_hours": null,
+        "language": null
+      }
+    },
+    "expected_status": {
+      "request_a": "matched",
+      "request_b": "matched"
+    },
+    "short_reason_why_this_demo_is_useful": "Одинаковые условия на разные даты показывают влияние busy_dates.",
+    "expected_result_ids": {
+      "request_a": [
+        "HK-75012",
+        "HK-72938",
+        "HK-27222"
+      ],
+      "request_b": [
+        "HK-75012",
+        "HK-72938",
+        "HK-44733"
+      ]
+    }
+  }
+]
