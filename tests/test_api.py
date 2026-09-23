@@ -34,6 +34,7 @@ def test_recommend_returns_response():
 	assert response.status_code == 200
 	assert "status" in response.json()
 	assert "results" in response.json()
+	assert "score" in response.json()["results"][0]
 
 
 def test_category_not_found_works_through_api():
@@ -45,3 +46,10 @@ def test_category_not_found_works_through_api():
 	assert response.status_code == 200
 	assert response.json()["status"] == "category_not_found"
 	assert response.json()["results"] == []
+
+
+def test_api_uses_no_external_keys():
+	import app.main as api_module
+
+	assert "OPENAI_API_KEY" not in vars(api_module)
+	assert "NVIDIA_API_KEY" not in vars(api_module)

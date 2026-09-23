@@ -55,6 +55,7 @@ def main() -> None:
     with st.sidebar:
         st.header("Pipeline")
         st.write("Filter → Score → Evidence → Explain")
+        st.caption("Работает локально, без внешних API")
         st.caption(f"Профилей загружено: {len(vendors)}")
 
     with st.form("recommendation_form"):
@@ -118,6 +119,8 @@ def main() -> None:
                 st.subheader(card.anon_name)
                 st.write(f"Категория: {card.category} · Город: {card.city}")
                 st.write(f"Цена от: {card.price_from_kzt:,} ₸".replace(",", " "))
+                if card.score is not None:
+                    st.write(f"Score: {card.score:.3f}")
                 render_badges(card)
                 st.write(card.explanation)
     elif response.status == "category_not_found":

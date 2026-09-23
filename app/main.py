@@ -1,8 +1,6 @@
 """FastAPI entrypoint for ToiMatch AI recommendations."""
 
 from datetime import date
-from pathlib import Path
-
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -12,20 +10,7 @@ from .recommender import recommend
 from .schemas import RecommendationRequest
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
-
-
-def _dataset_path() -> Path:
-	preferred = DATA_DIR / "hackathon_dataset_anonymized.csv"
-	if preferred.exists():
-		return preferred
-	csv_files = sorted(DATA_DIR.glob("*.csv"))
-	if not csv_files:
-		raise FileNotFoundError(f"No CSV dataset found in {DATA_DIR}")
-	return csv_files[0]
-
-
-VENDORS = load_vendors(_dataset_path())
+VENDORS = load_vendors()
 
 app = FastAPI(title="ToiMatch AI")
 
