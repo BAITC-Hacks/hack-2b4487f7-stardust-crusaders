@@ -2,6 +2,7 @@
 
 from collections import Counter
 
+from .explanations import build_card_explanation, build_evidence
 from .filters import evaluate_pool, filter_city_category_pool, passes_hard_filters
 from .scoring import score_vendor
 from .schemas import (
@@ -24,12 +25,12 @@ def _request_summary(request: RecommendationRequest) -> dict:
 	}
 
 
-def _card(vendor: Vendor, request: RecommendationRequest) -> RecommendationCard:
-	explanation = (
-		f"Цена от {vendor.price_from_kzt} ₸ укладывается в бюджет "
-		f"{request.budget_kzt} ₸. Формат «{request.event_type}» поддерживается, "
-		f"подрядчик свободен на дату {request.date.isoformat()}."
-	)
+def _card(
+	vendor: Vendor,
+	request: RecommendationRequest,
+	score_breakdown: dict[str, float],
+) -> RecommendationCard:
+	evidence = build_evidence(vendor, request, score_breakdown)
 	return RecommendationCard(
 		id=vendor.id,
 		anon_name=vendor.anon_name,
@@ -39,7 +40,7 @@ def _card(vendor: Vendor, request: RecommendationRequest) -> RecommendationCard:
 		synthetic=vendor.synthetic,
 		city_imputed=vendor.city_imputed,
 		price_imputed=vendor.price_imputed,
-		explanation=explanation,
+		explanation=build_card_explanation(evidence),
 	)
 
 
@@ -115,6 +116,9 @@ def recommend(
 	return RecommendationResponse(
 		status="matched",
 		message=f"Найдено подходящих подрядчиков: {len(eligible)}.",
-		results=[_card(vendor, request) for vendor in eligible[:3]],
+		results=[
+			_card(vendor, request, scores[vendor.id])
+			for vendor in eligible[:3]
+		],
 		debug=debug,
 	)
