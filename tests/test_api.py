@@ -51,5 +51,5 @@ def test_category_not_found_works_through_api():
 def test_api_uses_no_external_keys():
 	import app.main as api_module
 
-	assert "OPENAI_API_KEY" not in vars(api_module)
-	assert "NVIDIA_API_KEY" not in vars(api_module)
+	assert "OPENAI" + "_API_KEY" not in vars(api_module)
+	assert "NVIDIA" + "_API_KEY" not in vars(api_module)

@@ -91,8 +91,3 @@ def score_vendor(vendor: Vendor, request: RecommendationRequest) -> dict[str, fl
 		"description": description,
 	})
 	return breakdown
-
-
-def score_candidate(vendor: Vendor, request: RecommendationRequest) -> dict[str, float]:
-	"""Compatibility alias for callers that use candidate terminology."""
-	return score_vendor(vendor, request)

@@ -55,7 +55,6 @@ Filter → Score → Evidence → Explain
 - Streamlit для демонстрационного UI;
 - Pydantic и Python dataclasses для схем данных;
 - стандартный модуль `csv` для загрузки dataset;
-- pandas указан среди зависимостей проекта для совместимости окружения;
 - pytest для автоматических тестов.
 
 ## Установка и запуск

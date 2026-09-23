@@ -18,6 +18,10 @@ def test_load_vendors_normalizes_dataset():
     assert vendors[0].id
     assert all(isinstance(category, str) for category in vendors[0].categories)
     assert isinstance(vendors[0].categories, list)
+    assert isinstance(vendors[0].event_formats, list)
+    assert all(isinstance(item, str) for item in vendors[0].event_formats)
+    assert isinstance(vendors[0].languages, list)
+    assert all(isinstance(item, str) for item in vendors[0].languages)
     assert isinstance(vendors[0].busy_dates, set)
     assert all(isinstance(item, date) for item in vendors[0].busy_dates)
 

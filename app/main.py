@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from .dataset import load_vendors
 from .recommender import recommend
-from .schemas import RecommendationRequest
+from .schemas import RecommendationRequest, RecommendationResponse
 
 
 VENDORS = load_vendors()
@@ -30,7 +30,7 @@ def health() -> dict[str, int | str]:
 	return {"status": "ok", "vendors_loaded": len(VENDORS)}
 
 
-@app.post("/recommend")
+@app.post("/recommend", response_model=RecommendationResponse)
 def recommend_endpoint(payload: RecommendPayload) -> dict:
 	request = RecommendationRequest(
 		city=payload.city,
