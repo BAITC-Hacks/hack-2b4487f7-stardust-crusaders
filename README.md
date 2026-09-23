@@ -1,31 +1,177 @@
 # ToiMatch AI
 
-## Краткое описание
+ToiMatch AI помогает быстро подобрать подрядчиков для мероприятия по городу,
+категории, формату события, дате, бюджету, длительности и языку. Решение
+ориентировано на организаторов мероприятий и команды, которым нужно сравнить
+доступные профили без ручного просмотра всего каталога.
 
 ## Что реализовано
 
+- загрузка и нормализация CSV-датасета;
+- hard filters по городу и категории, занятости на дату, формату, бюджету и
+  длительности;
+- deterministic scoring с фиксированными весами и стабильной сортировкой;
+- evidence-based explanations без LLM и внешних API;
+- статусы `matched`, `category_not_found` и `no_eligible_candidates`;
+- FastAPI endpoints `GET /health` и `POST /recommend`;
+- минимальный Streamlit UI для демонстрации;
+- воспроизводимые demo cases для плотных и редких категорий, отказа и сравнения
+  дат;
+- тесты загрузчика, фильтров, ranking, explanations и API.
+
+## Как работает решение
+
+1. Пользователь задаёт город, дату, формат мероприятия, категорию, бюджет и
+	необязательные длительность и язык.
+2. Система формирует pool подрядчиков из выбранных города и категории.
+3. Hard filters исключают занятых, неподходящих по формату, бюджету или
+	длительности.
+4. Для оставшихся кандидатов считается детерминированный score.
+5. Кандидаты сортируются по score, затем по цене и ID.
+6. Для первых трёх профилей формируются карточки с ценой, флагами качества
+	данных и объяснением на основе evidence из профиля.
+
+## Pipeline
+
+```text
+Filter → Score → Evidence → Explain
+```
+
 ## Архитектура
+
+- `app/dataset.py` — чтение CSV и преобразование полей в модели `Vendor`;
+- `app/filters.py` — pool по городу и категории и hard-filter evaluation;
+- `app/scoring.py` — deterministic scoring budget, language, duration и
+  description;
+- `app/explanations.py` — сбор проверяемых evidence и текст объяснения;
+- `app/recommender.py` — orchestration pool → filters → scoring → карточки;
+- `app/main.py` — FastAPI-приложение и локальные endpoints;
+- `streamlit_app.py` — демонстрационный Streamlit-интерфейс.
+
+## Технологии
+
+- Python;
+- FastAPI и Uvicorn для локального API;
+- Streamlit для демонстрационного UI;
+- Pydantic и Python dataclasses для схем данных;
+- стандартный модуль `csv` для загрузки dataset;
+- pandas указан среди зависимостей проекта для совместимости окружения;
+- pytest для автоматических тестов.
 
 ## Установка и запуск
 
-## Как проверить
+Из корня репозитория:
+
+### Windows PowerShell
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+### Linux/macOS или Git Bash
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Проверить проект:
+
+```bash
+pytest -q
+python scripts/audit_dataset.py
+```
+
+Запустить API:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Доступны:
+
+- `GET http://localhost:8000/health`;
+- `POST http://localhost:8000/recommend`.
+
+Запустить UI:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+После запуска UI открывается по адресу, который напечатает Streamlit, обычно
+`http://localhost:8501`.
+
+## Как проверить решение
+
+Основной набор тестов запускается командой `pytest -q`.
+
+Для демонстрации жюри используйте [demo/demo_cases.json](demo/demo_cases.json):
+
+1. `dense_category` — Алматы, категория `Ведущий`, формат `корпоратив`,
+	бюджет `2 000 000 ₸`; показывает несколько кандидатов и ranking.
+2. `rare_category` — Алматы, `Флорист`, формат `свадьба`, бюджет `250 000 ₸`;
+	показывает редкий pool и выдачу из двух результатов.
+3. `no_result` — Алматы, `Флорист`, формат `свадьба`, бюджет `199 999 ₸`;
+	показывает понятный отказ по бюджету.
+4. `date_comparison` — одинаковые параметры для `2027-01-01` и `2026-09-24`;
+	изменение дат меняет состав top results из-за `busy_dates`.
+
+Сценарии можно заново найти и проверить командой:
+
+```bash
+python scripts/find_demo_cases.py
+```
 
 ## Данные
 
+Используется файл `data/hackathon_dataset_anonymized.csv` с 66 профилями.
+В датасете представлены города Алматы, Астана и Зарубежье, а также категории,
+форматы мероприятий, языки, цены, ограничения по длительности, занятые даты и
+текстовые описания.
+
+Основные поля профиля:
+
+- `id`, `anon_name` — идентификатор и анонимное имя;
+- `categories`, `event_formats`, `languages` — pipe-separated списки;
+- `city`, `price_from_kzt`, `max_hours`, `busy_dates` — параметры подбора;
+- `description` — источник keyword-based evidence;
+- `synthetic` — профиль или значения созданы как синтетические данные;
+- `city_imputed` — город был восстановлен или заполнен при подготовке данных;
+- `price_imputed` — цена была восстановлена или заполнена при подготовке
+  данных.
+
+По результатам аудита: 13 профилей имеют `synthetic=true`, 8 —
+`city_imputed=true`, 18 — `price_imputed=true`; у 9 профилей `max_hours` пуст.
+CSV не изменяется приложением.
+
+## Использование AI-агента
+
+Antigravity использовался для реализации задач проекта и проверки результата.
+Работа была разделена по участникам и этапам: core backend, deterministic
+ranking, evidence/explanations, API, demo/data QA и Streamlit UI. Каждый этап
+фиксировался отдельным commit в Git.
+
 ## Ограничения
 
-## Dataset audit
+- нет бронирования и оформления заявки;
+- нет уведомлений;
+- нет реальной оплаты;
+- нет авторизации;
+- нет LLM, embeddings и fine-tuning;
+- нет внешних API;
+- рекомендации работают только по предоставленному dataset;
+- scoring и explanations являются детерминированными baseline-механизмами.
 
-Run `python scripts/audit_dataset.py` (Python 3.8+, standard library only).
-The script reads `data/hackathon_dataset_anonymized.csv`, falling back to
-`data/hackathon-dataset-anonymized.csv` only if the first file is absent.
-Paths are resolved relative to the script, regardless of the working directory.
-The dataset is never modified. An empty or invalid CSV produces an error and exit code 1.
+## Потенциал развития
 
-The report includes unique pipe-separated values, profile counts, category/city
-coverage, the top 10 categories by profile count, rare categories (<= 3 profiles),
-and busy-day statistics. Duplicate values within a profile count once.
-Empty `max_hours` is accepted; missing values are reported separately.
-Dates must use `YYYY-MM-DD`; December statistics include all years and all
-profiles, including those with no busy dates (zero days). Boolean fields accept
-case-insensitive `true`/`false` or blanks; blank flags are not counted as true.
+- добавить workflow заявки и подтверждения подрядчика;
+- подключить уведомления после появления backend-интеграции;
+- расширить валидацию и версионирование данных;
+- добавить пользовательские настройки весов ranking;
+- расширить demo и regression-тесты на новые датасеты;
+- отдельно исследовать AI-компоненты после появления качественных размеченных
+  данных и требований к контролю качества.
